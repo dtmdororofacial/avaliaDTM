@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AvaliaDTM, algoritmo diagnóstico do Eixo I do DC/TMD</title>
+<meta name="theme-color" content="#CF5331">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AvaliaDTM">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="icon" type="image/png" href="icone-192.png">
+<style>
+:root{
+  --primaria:#CF5331;
+  --ambar:#E6B02E;
+  --fundo:#FBF7F2;
+  --texto:#262026;
+  --vermelho:#C8332B;
+  --branco:#FFFFFF;
+  --cinza:#6B6570;
+  --linha:#E4DCD2;
+  --verde:#2f6b3c;
+  --verde-bg:#e3f0e6;
+  --ambar-bg:#fdf3d9;
+  --ambar-texto:#8a6d1d;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--fundo);
+  color:var(--texto);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  /* respeita a área da câmera e a barra inferior quando aberto pela tela de início */
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.wrap{max-width:880px;margin:0 auto;padding:32px 20px 80px;}
+h1,h2,h3{font-family:"Arial Black",Impact,system-ui,sans-serif;font-weight:800;letter-spacing:.2px;}
+.appname{font-family:"Arial Black",Impact,system-ui,sans-serif;color:var(--primaria);font-size:40px;line-height:1.1;margin:0;}
+.subtitle{color:var(--cinza);font-size:17px;margin:6px 0 0;}
+
+.brand-home{text-align:center;margin-bottom:10px;}
+.brand-bar{text-align:center;margin-bottom:20px;}
+.brand-bar .appname{font-size:26px;}
+
+.intro-lead{margin:20px 0 14px;font-weight:600;}
+
+.info-box{
+  margin:22px 0 0;padding:14px 16px;border-left:3px solid var(--ambar);
+  background:#FBF1DC;border-radius:4px;font-size:14px;color:#5a4a1e;
+}
+.info-box.privacy{border-left-color:var(--primaria);background:#fbe9e2;color:#5a2a1e;font-weight:600;}
+
+.btn{
+  font-family:inherit;font-size:16px;font-weight:600;
+  border:none;border-radius:4px;padding:13px 26px;cursor:pointer;
+}
+.btn-primary{background:var(--primaria);color:var(--branco);}
+.btn-primary:hover{background:#b8482a;}
+.btn-ghost{background:var(--branco);color:var(--texto);border:1px solid var(--linha);}
+.btn-ghost:hover{border-color:var(--cinza);}
+.btn-row{display:flex;justify-content:space-between;gap:12px;margin-top:30px;flex-wrap:wrap;}
+.start-row{margin-top:30px;}
+
+footer{margin-top:48px;padding-top:24px;border-top:1px solid var(--linha);}
+footer .block{font-size:12.5px;color:var(--cinza);margin-bottom:18px;line-height:1.5;}
+footer .block strong{color:var(--texto);}
+
+.progress-head{margin-bottom:6px;font-weight:600;font-size:14px;color:var(--primaria);}
+.progress-track{height:8px;background:var(--linha);border-radius:6px;overflow:hidden;margin-bottom:28px;}
+.progress-fill{height:100%;background:var(--primaria);width:0;transition:width .25s;}
+
+.module-title{font-size:22px;color:var(--texto);margin:0 0 4px;}
+.section{margin:22px 0;padding:20px;background:var(--branco);border:1px solid var(--linha);border-radius:6px;}
+.section > h3{font-size:16px;margin:0 0 10px;color:var(--primaria);}
+.sec-instruction{font-style:italic;color:var(--cinza);font-size:14px;margin:0 0 12px;}
+.field{margin:16px 0;}
+.field:first-of-type{margin-top:2px;}
+.field > label.q{display:block;font-weight:600;margin-bottom:8px;}
+.options{display:flex;flex-wrap:wrap;gap:8px 14px;}
+.options label{
+  display:inline-flex;align-items:center;gap:7px;font-size:15px;cursor:pointer;
+  padding:8px 12px;border:1px solid var(--linha);border-radius:4px;background:var(--fundo);
+}
+.options input{accent-color:var(--primaria);width:18px;height:18px;}
+.options label:has(input:checked){border-color:var(--primaria);background:#fbe9e2;font-weight:600;}
+input[type=number]{
+  width:100%;max-width:160px;font-family:inherit;font-size:16px;color:var(--texto);
+  border:1px solid var(--linha);border-radius:4px;padding:10px 12px;background:var(--branco);
+}
+select{
+  width:100%;font-family:inherit;font-size:15px;color:var(--texto);
+  border:1px solid var(--linha);border-radius:4px;padding:10px 12px;background:var(--branco);
+}
+textarea{
+  width:100%;font-family:inherit;font-size:15px;color:var(--texto);
+  border:1px solid var(--linha);border-radius:4px;padding:12px;background:var(--branco);
+  min-height:90px;resize:vertical;
+}
+
+.hyp-card{border:1px solid var(--linha);border-radius:6px;margin-bottom:12px;overflow:hidden;background:var(--branco);}
+.hyp-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;background:var(--branco);border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;text-align:left;color:var(--texto);}
+.hyp-toggle:hover{background:var(--fundo);}
+.badge{font-size:12px;padding:4px 10px;border-radius:12px;font-weight:700;white-space:nowrap;}
+.badge-diag{background:var(--verde-bg);color:var(--verde);}
+.badge-hipotese{background:var(--ambar-bg);color:var(--ambar-texto);}
+.badge-confirmado{background:#fbe9e2;color:var(--primaria);}
+.hyp-detail{padding:0 16px 16px;font-size:14px;color:var(--texto);border-top:1px solid var(--linha);}
+.hyp-detail ul{margin:10px 0;padding-left:20px;}
+.hyp-detail li{margin-bottom:5px;}
+.hyp-detail .descartados-title{font-weight:700;margin-top:12px;}
+.hyp-detail .pressuposto-title{font-weight:700;margin-top:12px;color:var(--ambar-texto);}
+
+.pend-section{border-left:3px solid var(--ambar);}
+.pend-item{padding:12px 0;border-top:1px solid var(--linha);}
+.pend-item:first-of-type{border-top:none;padding-top:4px;}
+.pend-head{font-weight:700;font-size:15px;}
+.pend-item ul{margin:6px 0 8px;padding-left:20px;font-size:14px;}
+.pend-item li{margin-bottom:3px;}
+.btn-link{
+  background:none;border:none;padding:0;cursor:pointer;
+  font-family:inherit;font-size:14px;font-weight:600;
+  color:var(--primaria);text-decoration:underline;
+}
+.btn-link:hover{color:#b8482a;}
+
+.toast{
+  position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+  background:var(--texto);color:var(--branco);padding:11px 20px;border-radius:4px;
+  font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;
+}
+.toast.show{opacity:1;}
+.hidden{display:none !important;}
+#resumo-text{min-height:260px;}
+</style>
+</head>
+<body>
+
+<div id="screen-home" class="wrap">
+  <header class="brand-home">
+    <h1 class="appname">AvaliaDTM</h1>
+    <p class="subtitle">Algoritmo diagnóstico do Eixo I do DC/TMD</p>
+  </header>
+
+  <div class="info-box privacy">
+    Nenhum dado é salvo neste aplicativo. Todas as respostas existem apenas nesta sessão e são apagadas ao recarregar ou fechar a página.
+  </div>
+
+  <div class="start-row">
+    <button class="btn btn-primary" id="btn-start">Iniciar avaliação</button>
+  </div>
+
+  <footer>
+    <div class="block">
+      <strong>Referências.</strong> Baseado em: Schiffman E et al. Diagnostic Criteria for Temporomandibular Disorders (DC/TMD) for Clinical and Research Applications. J Oral Facial Pain Headache. 2014;28(1):6 a 27. Instrumentos em português brasileiro: tradução de Pereira Jr. FJ e Gonçalves DAG (2020), International Network for Orofacial Pain and Related Disorders Methodology (INfORM). Os instrumentos do DC/TMD são de reprodução livre com atribuição. Implementação digital independente, sem endosso oficial do INfORM.
+    </div>
+    <div class="block">
+      <strong>Privacidade.</strong> Nenhum dado inserido nesta ferramenta é armazenado ou transmitido. Todas as informações permanecem exclusivamente no dispositivo do usuário durante o uso. Em conformidade com a LGPD.
+    </div>
+  </footer>
+</div>
+
+<div id="screen-flow" class="wrap hidden">
+  <div class="brand-bar"><span class="appname">AvaliaDTM</span></div>
+  <div class="progress-head" id="progress-head"></div>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  <div id="form-content"></div>
+  <div class="btn-row" id="nav-row"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ========================================================= */
+const SIMNAO = ["Sim","Não"];
+const LADO3 = ["Direito","Esquerdo","Ambos"];
+const LADO4 = ["Direito","Esquerdo","Ambos","Não sabe"];
+const LOC34_OPTS = ["Temporal direito","Temporal esquerdo","Masseter direito","Masseter esquerdo","ATM direita","ATM esquerda","Outro local"];
+const SPREAD_OPTS = [
+  "ficou restrita ao ponto palpado",
+  "espalhou-se além do ponto, mas dentro dos limites do músculo",
+  "espalhou-se além dos limites do músculo palpado"
+];
+const RM_OPTS = ["Não realizada","Disco em posição normal","Disco deslocado com recaptura na abertura","Disco deslocado sem recaptura na abertura"];
+const TC_OPTS = ["Não realizada","Sem alterações degenerativas","Com alterações degenerativas (cisto subcondral, erosão, esclerose generalizada ou osteófito)"];
+
+let STATE = {};
+let currentBlock = 1;
+let avaliacaoAtiva = false;
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function sideLabel(s){ return s==="D" ? "direita" : "esquerda"; }
+function sideLabelM(s){ return s==="D" ? "direito" : "esquerdo"; }
+function sidesFromLado(v){
+  if(v==="Direito") return new Set(["D"]);
+  if(v==="Esquerdo") return new Set(["E"]);
+  if(v==="Ambos") return new Set(["D","E"]);
+  return new Set();
+}
+function ladoFrase(v){
+  if(v==="Direito") return "à direita";
+  if(v==="Esquerdo") return "à esquerda";
+  if(v==="Ambos") return "bilateral";
+  if(v==="Não sabe") return "com lado não identificado";
+  return "";
+}
+function rotuloPendencia(item){
+  if(!item.lado) return item.familia;
+  if(item.lado==="ambos os lados") return item.familia + ", ambos os lados";
+  return item.familia + " à " + item.lado;
+}
+function vazio(name){ const v = STATE[name]; return v===undefined || v===""; }
+function algumVazio(names){ return names.some(n=>vazio(n)); }
+function temMedidaAbertura(){ return !vazio("abertura") && !vazio("trespasse"); }
+function aberturaTotal(){ return (parseFloat(STATE.abertura)||0) + (parseFloat(STATE.trespasse)||0); }
+
+/* =========================================================
+   Construtores de campo
+========================================================= */
+function radioField(name, question, opts){
+  const current = STATE[name];
+  const optsHtml = opts.map((o,i)=>{
+    const id = `${name}_${i}`;
+    const checked = current===o ? "checked" : "";
+    return `<label for="${id}"><input type="radio" id="${id}" name="${esc(name)}" value="${esc(o)}" ${checked}>${esc(o)}</label>`;
+  }).join("");
+  return `<div class="field"><label class="q">${esc(question)}</label><div class="options">${optsHtml}</div></div>`;
+}
+function checkboxField(name, question, opts){
+  const current = STATE[name] || [];
+  const optsHtml = opts.map((o,i)=>{
+    const id = `${name}_${i}`;
+    const checked = current.includes(o) ? "checked" : "";
+    return `<label for="${id}"><input type="checkbox" id="${id}" name="${esc(name)}" value="${esc(o)}" ${checked}>${esc(o)}</label>`;
+  }).join("");
+  return `<div class="field"><label class="q">${esc(question)}</label><div class="options">${optsHtml}</div></div>`;
+}
+function numberField(name, question){
+  const current = STATE[name]!==undefined ? STATE[name] : "";
+  return `<div class="field"><label class="q" for="${name}">${esc(question)}</label><input type="number" step="any" inputmode="decimal" id="${name}" name="${esc(name)}" value="${esc(current)}"></div>`;
+}
+function selectField(name, question, opts){
+  const current = STATE[name] !== undefined ? STATE[name] : opts[0];
+  const optsHtml = opts.map(o=>`<option value="${esc(o)}" ${current===o?"selected":""}>${esc(o)}</option>`).join("");
+  return `<div class="field"><label class="q" for="${name}">${esc(question)}</label><select id="${name}" name="${esc(name)}">${optsHtml}</select></div>`;
+}
+
+/* =========================================================
+   Ramos ativados pela história
+========================================================= */
+function computeBranches(){
+  const ramoDor = STATE.qs3==="Sim" && STATE.qs4==="Sim";
+  const ramoCefaleia = STATE.qs5==="Sim" && STATE.qs7==="Sim";
+  const ramoDDSR = STATE.qs9==="Sim" && STATE.qs10==="Sim";
+  const ramoTravInterm = STATE.qs11==="Sim";
+  const ramoSublux = STATE.qs13==="Sim" && STATE.qs14==="Sim";
+  const ladosRuidoHist = STATE.qs8==="Sim" ? sidesFromLado(STATE.qs8_lado) : new Set();
+  return {ramoDor, ramoCefaleia, ramoDDSR, ramoTravInterm, ramoSublux, ladosRuidoHist};
+}
+function ladosRuidoAtual(b){
+  const s = new Set(b.ladosRuidoHist);
+  if(STATE.examRuido_D==="Sim") s.add("D");
+  if(STATE.examRuido_E==="Sim") s.add("E");
+  return s;
+}
+
+/* =========================================================
+   Bloco 1, história de dor
+========================================================= */
+function renderBlock1(){
+  let html = `<div class="section"><h3>Bloco 1 de 5, história de dor</h3>`;
+  html += radioField("qs3","Nos últimos 30 dias, o paciente teve dor na mandíbula, têmpora, ouvido ou na frente do ouvido?",SIMNAO);
+  if(STATE.qs3==="Sim"){
+    html += radioField("qs4","Essa dor é modificada (melhora ou piora) por mastigação, abertura da boca, apertamento, ranger de dentes ou outra função ou parafunção mandibular?",SIMNAO);
+  }
+  html += radioField("qs5","Nos últimos 30 dias, o paciente teve dor de cabeça que incluiu a região das têmporas?",SIMNAO);
+  if(STATE.qs5==="Sim"){
+    html += radioField("qs7","Essa dor de cabeça é modificada por mastigação, abertura da boca, apertamento, ranger de dentes ou outra função ou parafunção mandibular?",SIMNAO);
+  }
+  html += `</div>`;
+  document.getElementById("form-content").innerHTML = html;
+}
+
+/* =========================================================
+   Bloco 2, história articular
+========================================================= */
+function renderBlock2(){
+  let html = `<div class="section"><h3>Bloco 2 de 5, história articular</h3>`;
+  html += radioField("qs8","Nos últimos 30 dias, o paciente percebeu ruídos na ATM ao movimentar ou usar a mandíbula?",SIMNAO);
+  if(STATE.qs8==="Sim") html += radioField("qs8_lado","Lado do ruído:",LADO3);
+  html += radioField("qs9","Alguma vez a mandíbula do paciente travou ou prendeu, mesmo que por um momento, de forma que não abrisse totalmente?",SIMNAO);
+  if(STATE.qs9==="Sim") html += radioField("qs10","Essa limitação de abertura foi grave a ponto de interferir na capacidade de comer?",SIMNAO);
+  html += radioField("qs11","Nos últimos 30 dias, houve travamento momentâneo da mandíbula, com limitação de abertura, que se desfez sozinho ou com alguma manobra?",SIMNAO);
+  if(STATE.qs11==="Sim") html += radioField("qs11_lado","Lado do travamento, quando o paciente souber identificar:",LADO4);
+  html += radioField("qs13","Nos últimos 30 dias, ao abrir bem a boca, a mandíbula travou ou prendeu de forma que o paciente não conseguiu fechar a boca?",SIMNAO);
+  if(STATE.qs13==="Sim") html += radioField("qs14","Foi necessária alguma manobra para conseguir fechar a boca?",SIMNAO);
+  html += `</div>`;
+  document.getElementById("form-content").innerHTML = html;
+}
+
+/* =========================================================
+   Bloco 3, exame físico
+========================================================= */
+function renderBlock3(){
+  const b = computeBranches();
+  const ladosRuido = ladosRuidoAtual(b);
+  const loc34 = STATE.loc34 || [];
+  const hasTemporal = s => loc34.includes(`Temporal ${sideLabelM(s)}`);
+  const hasMasseter = s => loc34.includes(`Masseter ${sideLabelM(s)}`);
+  const hasATM = s => loc34.includes(`ATM ${sideLabel(s)}`);
+  const travSides = (()=>{
+    if(!b.ramoTravInterm) return new Set();
+    if(!STATE.qs11_lado || STATE.qs11_lado==="Não sabe") return new Set(["D","E"]);
+    return sidesFromLado(STATE.qs11_lado);
+  })();
+
+  let html = `<div class="info-box">Esta é uma versão operacional simplificada do exame do DC/TMD, contém apenas os itens que alimentam o algoritmo diagnóstico. Pressupõe examinador treinado no protocolo completo, incluindo palpação calibrada e o conceito de dor familiar.</div>`;
+
+  html += `<div class="section"><h3>Bloco 3 de 5, abertura mandibular</h3>`;
+  html += numberField("abertura","Abertura máxima assistida (mm):");
+  html += numberField("trespasse","Trespasse vertical incisal (mm):");
+  if(STATE.abertura!==undefined && STATE.abertura!=="" && STATE.trespasse!==undefined && STATE.trespasse!==""){
+    const total = (parseFloat(STATE.abertura)||0) + (parseFloat(STATE.trespasse)||0);
+    html += `<p class="sec-instruction">Abertura assistida total: ${total} mm.</p>`;
+  }
+  html += `</div>`;
+
+  html += `<div class="section"><h3>Ruído articular ao exame</h3>`;
+  html += radioField("examRuido_D","Durante o exame, o paciente relatou ou o examinador detectou ruído articular na ATM direita?",SIMNAO);
+  html += radioField("examRuido_E","Durante o exame, o paciente relatou ou o examinador detectou ruído articular na ATM esquerda?",SIMNAO);
+  html += `</div>`;
+
+  if(b.ramoDor){
+    html += `<div class="section"><h3>Localização e palpação (dor)</h3>`;
+    html += checkboxField("loc34","Confirmação da localização da dor relatada:",LOC34_OPTS);
+    ["D","E"].forEach(s=>{
+      if(hasTemporal(s)) html += radioField(`palpTemp_${s}`,`Dor familiar à palpação do músculo temporal ${sideLabelM(s)}?`,SIMNAO);
+      if(hasMasseter(s)) html += radioField(`palpMass_${s}`,`Dor familiar à palpação do músculo masseter ${sideLabelM(s)}?`,SIMNAO);
+      if(hasTemporal(s)||hasMasseter(s)) html += radioField(`aberturaDorFam_${s}`,`Dor familiar durante abertura máxima, com ou sem assistência, lado ${sideLabelM(s)}?`,SIMNAO);
+    });
+    const anyPalpPositive = ["D","E"].some(s=> STATE[`palpTemp_${s}`]==="Sim" || STATE[`palpMass_${s}`]==="Sim");
+    if(anyPalpPositive){
+      html += radioField("palp5s","Foi realizada palpação prolongada de 5 segundos nos músculos com dor familiar?",SIMNAO);
+      if(STATE.palp5s==="Sim"){
+        ["D","E"].forEach(s=>{
+          if(STATE[`palpTemp_${s}`]==="Sim") html += radioField(`spreadTemp_${s}`,`A dor à palpação do temporal ${sideLabelM(s)}:`,SPREAD_OPTS);
+          if(STATE[`palpMass_${s}`]==="Sim") html += radioField(`spreadMass_${s}`,`A dor à palpação do masseter ${sideLabelM(s)}:`,SPREAD_OPTS);
+        });
+      }
+    }
+    ["D","E"].forEach(s=>{
+      const gate = hasATM(s) || ladosRuido.has(s) || b.ramoDDSR || (b.ramoTravInterm && travSides.has(s)) || b.ramoSublux;
+      if(gate){
+        html += radioField(`poloLateral_${s}`,`Dor familiar à palpação do polo lateral da ATM ou ao redor dele, lado ${sideLabelM(s)}?`,SIMNAO);
+        html += radioField(`atmMov_${s}`,`Dor familiar na ATM durante abertura máxima, lateralidade ou protrusão, lado ${sideLabelM(s)}?`,SIMNAO);
+      }
+    });
+    html += `</div>`;
+  }
+
+  if(b.ramoCefaleia){
+    html += `<div class="section"><h3>Cefaleia</h3>`;
+    ["D","E"].forEach(s=>{
+      html += radioField(`cefTemp_${s}`,`A cefaleia relatada localiza-se na região do músculo temporal, lado ${sideLabelM(s)}?`,SIMNAO);
+      if(STATE[`cefTemp_${s}`]==="Sim") html += radioField(`cefFam_${s}`,`Cefaleia familiar reproduzida à palpação do temporal ou durante movimentos mandibulares, lado ${sideLabelM(s)}?`,SIMNAO);
+    });
+    html += radioField("outroDiagCef","Existe outro diagnóstico de cefaleia que explique melhor o quadro?",SIMNAO);
+    html += `</div>`;
+  }
+
+  if(ladosRuido.size>0){
+    html += `<div class="section"><h3>Características do ruído articular</h3>`;
+    ["D","E"].forEach(s=>{
+      if(!ladosRuido.has(s)) return;
+      html += radioField(`clique1518_${s}`,`Clique detectado durante abertura E fechamento, em pelo menos 1 de 3 repetições, lado ${sideLabelM(s)}?`,SIMNAO);
+      if(STATE[`clique1518_${s}`]==="Não"){
+        html += radioField(`clique16_${s}`,`Clique detectado em abertura OU fechamento E também em lateralidade ou protrusão, lado ${sideLabelM(s)}?`,SIMNAO);
+      }
+      html += radioField(`crepitacao_${s}`,`Crepitação detectada à palpação durante movimentos mandibulares, lado ${sideLabelM(s)}?`,SIMNAO);
+    });
+    html += `</div>`;
+  }
+
+  if(b.ramoTravInterm){
+    html += `<div class="section"><h3>Travamento intermitente</h3>`;
+    html += radioField("travExame","O travamento ocorreu durante o exame?",SIMNAO);
+    if(STATE.travExame==="Sim") html += radioField("manobraDestrav","Foi necessária manobra para destravar?",SIMNAO);
+    html += `</div>`;
+  }
+
+  if(b.ramoSublux){
+    html += `<div class="section"><h3>Subluxação</h3>`;
+    html += radioField("subluxExame","O travamento de boca aberta ocorreu durante o exame?",SIMNAO);
+    if(STATE.subluxExame==="Sim") html += radioField("subluxIncapaz","O paciente foi incapaz de fechar a boca sem manobra?",SIMNAO);
+    html += `</div>`;
+  }
+
+  document.getElementById("form-content").innerHTML = html;
+}
+
+/* =========================================================
+   Bloco 4, exames de imagem
+========================================================= */
+function renderBlock4(){
+  let html = `<div class="section"><h3>Bloco 4 de 5, exames de imagem</h3>
+    <p class="sec-instruction">Registre apenas exames realizados. Sem imagem, os diagnósticos articulares são emitidos como hipótese clínica.</p></div>`;
+  ["D","E"].forEach(s=>{
+    html += `<div class="section"><h3>ATM ${sideLabel(s)}</h3>`;
+    html += selectField(`rm_${s}`,"Ressonância magnética da ATM:",RM_OPTS);
+    html += selectField(`tc_${s}`,"TC ou TCFC da ATM:",TC_OPTS);
+    html += `</div>`;
+  });
+  document.getElementById("form-content").innerHTML = html;
+}
+
+/* =========================================================
+   Motor diagnóstico
+========================================================= */
+function computeDiagnoses(){
+  const b = computeBranches();
+  const loc34 = STATE.loc34 || [];
+  const hasTemporal = s => loc34.includes(`Temporal ${sideLabelM(s)}`);
+  const hasMasseter = s => loc34.includes(`Masseter ${sideLabelM(s)}`);
+  const hasATM = s => loc34.includes(`ATM ${sideLabel(s)}`);
+  const ladosRuido = ladosRuidoAtual(b);
+
+  const porLado = {D:[], E:[]};
+  const descartadosLado = {D:[], E:[]};
+  const semLado = [];
+  const doloroso = {D:false, E:false};
+
+  /* Mialgia */
+  ["D","E"].forEach(s=>{
+    if(!b.ramoDor) return;
+    const locOk = hasTemporal(s) || hasMasseter(s);
+    const examOk = locOk && (STATE[`palpTemp_${s}`]==="Sim" || STATE[`palpMass_${s}`]==="Sim" || STATE[`aberturaDorFam_${s}`]==="Sim");
+    if(examOk){
+      let spreads = [];
+      if(STATE.palp5s==="Sim"){
+        if(STATE[`palpTemp_${s}`]==="Sim" && STATE[`spreadTemp_${s}`]) spreads.push(STATE[`spreadTemp_${s}`]);
+        if(STATE[`palpMass_${s}`]==="Sim" && STATE[`spreadMass_${s}`]) spreads.push(STATE[`spreadMass_${s}`]);
+      }
+      let nome;
+      if(spreads.includes("espalhou-se além dos limites do músculo palpado")) nome = "Dor miofascial com dor referida";
+      else if(spreads.includes("espalhou-se além do ponto, mas dentro dos limites do músculo")) nome = "Dor miofascial";
+      else if(spreads.includes("ficou restrita ao ponto palpado")) nome = "Mialgia local";
+      else nome = "Mialgia";
+      const criterios = ["História: dor mandibular, temporal ou auricular modificada por função (QS3 e QS4)."];
+      if(hasTemporal(s)) criterios.push(`Localização confirmada no músculo temporal ${sideLabelM(s)} (item 3.4).`);
+      if(hasMasseter(s)) criterios.push(`Localização confirmada no músculo masseter ${sideLabelM(s)} (item 3.4).`);
+      if(STATE[`palpTemp_${s}`]==="Sim") criterios.push("Dor familiar à palpação do temporal (item 3.5).");
+      if(STATE[`palpMass_${s}`]==="Sim") criterios.push("Dor familiar à palpação do masseter (item 3.6).");
+      if(STATE[`aberturaDorFam_${s}`]==="Sim") criterios.push("Dor familiar durante abertura máxima (item 3.7).");
+      if(spreads.length) criterios.push(`Padrão à palpação prolongada de 5 segundos: ${spreads.join("; ")} (item 3.9).`);
+      porLado[s].push({nome, status:"Diagnóstico", criterios});
+      doloroso[s] = true;
+    } else if(b.ramoDor){
+      const itensMusc = [];
+      if(hasTemporal(s)) itensMusc.push(`palpTemp_${s}`);
+      if(hasMasseter(s)) itensMusc.push(`palpMass_${s}`);
+      itensMusc.push(`aberturaDorFam_${s}`);
+      descartadosLado[s].push({nome:"Mialgia (e subtipos)", motivo: !locOk
+        ? (loc34.length===0
+            ? "A localização da dor ainda não foi registrada (item 3.4); diagnóstico não avaliado neste lado."
+            : "Nenhuma localização muscular (temporal ou masseter) foi confirmada neste lado (item 3.4).")
+        : (algumVazio(itensMusc)
+            ? "Localização muscular confirmada, mas os testes de palpação ou de abertura ainda não foram respondidos (itens 3.5, 3.6, 3.7); diagnóstico não avaliado."
+            : "Localização muscular confirmada, mas sem dor familiar à palpação ou em abertura máxima (itens 3.5, 3.6, 3.7).")});
+    }
+  });
+
+  /* Artralgia */
+  ["D","E"].forEach(s=>{
+    if(!b.ramoDor) return;
+    const examOk = hasATM(s) && (STATE[`poloLateral_${s}`]==="Sim" || STATE[`atmMov_${s}`]==="Sim");
+    if(examOk){
+      const criterios = ["História: dor mandibular, temporal ou auricular modificada por função (QS3 e QS4).", `Localização confirmada na ATM ${sideLabel(s)} (item 3.4).`];
+      if(STATE[`poloLateral_${s}`]==="Sim") criterios.push("Dor familiar à palpação do polo lateral da ATM (item 3.10).");
+      if(STATE[`atmMov_${s}`]==="Sim") criterios.push("Dor familiar na ATM durante movimentos mandibulares (item 3.11).");
+      porLado[s].push({nome:"Artralgia", status:"Diagnóstico", criterios});
+      doloroso[s] = true;
+    } else if(b.ramoDor){
+      descartadosLado[s].push({nome:"Artralgia", motivo: !hasATM(s)
+        ? (loc34.length===0
+            ? "A localização da dor ainda não foi registrada (item 3.4); diagnóstico não avaliado neste lado."
+            : "A ATM não foi confirmada como local de dor neste lado (item 3.4).")
+        : (algumVazio([`poloLateral_${s}`,`atmMov_${s}`])
+            ? "ATM confirmada como local de dor, mas a palpação do polo lateral e a dor em movimentos ainda não foram respondidas (itens 3.10, 3.11); diagnóstico não avaliado."
+            : "ATM confirmada como local de dor, mas sem dor familiar à palpação do polo lateral ou em movimentos (itens 3.10, 3.11).")});
+    }
+  });
+
+  const algumaDorosa = doloroso.D || doloroso.E;
+
+  /* Cefaleia atribuída à DTM */
+  ["D","E"].forEach(s=>{
+    if(!b.ramoCefaleia) return;
+    const examOk = STATE[`cefTemp_${s}`]==="Sim" && STATE[`cefFam_${s}`]==="Sim";
+    if(examOk){
+      if(STATE.outroDiagCef==="Sim"){
+        descartadosLado[s].push({nome:"Cefaleia atribuída à DTM", motivo:"Existe outro diagnóstico de cefaleia que explica melhor o quadro (item 3.14 = Sim)."});
+      } else if(!algumaDorosa){
+        descartadosLado[s].push({nome:"Cefaleia atribuída à DTM", motivo:"Nenhum diagnóstico de DTM dolorosa (mialgia ou artralgia) foi identificado na avaliação; a cefaleia atribuída à DTM nunca é emitida isoladamente."});
+      } else {
+        const criterios = [
+          "História: cefaleia na região temporal modificada por função (QS5 e QS7).",
+          `Cefaleia localizada na região do temporal ${sideLabelM(s)} (item 3.12).`,
+          "Cefaleia familiar reproduzida à palpação ou durante movimentos mandibulares (item 3.13).",
+          "Diagnóstico de DTM dolorosa presente na mesma avaliação."
+        ];
+        const pressupostos = [];
+        if(STATE.outroDiagCef==="Não") criterios.push("Nenhum outro diagnóstico de cefaleia explica melhor o quadro (item 3.14 = Não).");
+        else pressupostos.push("O item 3.14 não foi respondido. O diagnóstico pressupõe que não exista outro diagnóstico de cefaleia que explique melhor o quadro.");
+        porLado[s].push({nome:"Cefaleia atribuída à DTM", status:"Diagnóstico", criterios, pressupostos});
+      }
+    } else if(b.ramoCefaleia){
+      descartadosLado[s].push({nome:"Cefaleia atribuída à DTM", motivo:"Cefaleia não localizada no temporal e/ou não reproduzida à palpação ou aos movimentos mandibulares (itens 3.12, 3.13)."});
+    }
+  });
+
+  /* DDCR e DDCR com travamento intermitente */
+  const travSidesKnown = (!STATE.qs11_lado || STATE.qs11_lado==="Não sabe") ? null : sidesFromLado(STATE.qs11_lado);
+  let examConfirmTrav = true;
+  if(STATE.travExame==="Sim") examConfirmTrav = STATE.manobraDestrav==="Sim";
+
+  const ddcrInfo = {D:null, E:null};
+  ["D","E"].forEach(s=>{
+    const histOk = ladosRuido.has(s);
+    const examOk = STATE[`clique1518_${s}`]==="Sim" || STATE[`clique16_${s}`]==="Sim";
+    if(histOk && examOk){
+      const rmVal = STATE[`rm_${s}`];
+      ddcrInfo[s] = {imgConfirm: rmVal==="Disco deslocado com recaptura na abertura"};
+    } else if(histOk){
+      const cliquePendente = vazio(`clique1518_${s}`) || (STATE[`clique1518_${s}`]==="Não" && vazio(`clique16_${s}`));
+      descartadosLado[s].push({nome:"DDCR (deslocamento do disco com redução)", motivo: cliquePendente
+        ? "Ruído confirmado, mas a avaliação do clique ainda não foi respondida (itens 3.15, 3.16); diagnóstico não avaliado."
+        : "Ruído confirmado, mas nenhum clique foi detectado durante abertura/fechamento ou em lateralidade/protrusão (itens 3.15, 3.16)."});
+    }
+  });
+  ["D","E"].forEach(s=>{
+    if(!ddcrInfo[s]) return;
+    const travApplies = b.ramoTravInterm && (travSidesKnown ? travSidesKnown.has(s) : true) && examConfirmTrav;
+    ddcrInfo[s].travApplies = travApplies;
+  });
+
+  /* DDSR */
+  let ddsrGlobal = null;
+  if(b.ramoDDSR){
+    const medido = temMedidaAbertura();
+    const total = aberturaTotal();
+    ddsrGlobal = {medido, total, comLimitacao: medido ? total < 40 : null};
+  }
+  const ddsrInfo = {D:null, E:null};
+  if(ddsrGlobal){
+    ["D","E"].forEach(s=>{
+      const rmVal = STATE[`rm_${s}`];
+      ddsrInfo[s] = {imgConfirm: rmVal==="Disco deslocado sem recaptura na abertura"};
+    });
+  }
+
+  /* Exclusão mútua e emissão DDCR/DDSR por lado */
+  ["D","E"].forEach(s=>{
+    const hasDDCR = !!ddcrInfo[s];
+    const hasDDSR = !!ddsrInfo[s];
+    let emitDDCR=false, emitDDSR=false, conflictNote=null;
+    if(hasDDCR && hasDDSR){
+      if(ddsrGlobal.comLimitacao===true){
+        emitDDSR = true;
+      } else {
+        const ddcrImgOk = ddcrInfo[s].imgConfirm;
+        const ddsrImgOk = ddsrInfo[s].imgConfirm;
+        if(ddcrImgOk && !ddsrImgOk) emitDDCR = true;
+        else if(!ddcrImgOk && ddsrImgOk) emitDDSR = true;
+        else { emitDDCR = true; conflictNote = "Critérios de DDCR e de DDSR foram cumpridos simultaneamente nesta articulação, sem imagem que resolva o conflito. Por regra de desempate, foi emitido o diagnóstico de DDCR."; }
+      }
+    } else if(hasDDCR){ emitDDCR = true; }
+    else if(hasDDSR){ emitDDSR = true; }
+
+    if(emitDDCR){
+      const info = ddcrInfo[s];
+      const isInterm = info.travApplies;
+      const nome = isInterm ? "DDCR com travamento intermitente" : "DDCR (deslocamento do disco com redução)";
+      const status = info.imgConfirm ? "Diagnóstico confirmado por imagem" : "Hipótese clínica (confirmação por imagem pendente)";
+      const criterios = [
+        `Ruído articular relatado ou detectado ao exame na ATM ${sideLabel(s)} (QS8 ou item 3.3).`,
+        "Clique em abertura e fechamento, ou clique em abertura/fechamento associado a lateralidade/protrusão (itens 3.15, 3.16)."
+      ];
+      if(isInterm){
+        criterios.push("Episódios de travamento intermitente com desbloqueio (QS11).");
+        if(STATE.travExame==="Sim") criterios.push("Travamento ocorrido durante o exame, com manobra necessária para destravar (item 3.18).");
+      }
+      if(info.imgConfirm) criterios.push("RM compatível: disco deslocado com recaptura na abertura (item 4.1).");
+      const notas = conflictNote ? [conflictNote] : [];
+      porLado[s].push({nome, status, criterios, notas});
+    }
+    if(emitDDSR){
+      const info = ddsrInfo[s];
+      let nome;
+      if(ddsrGlobal.comLimitacao===true) nome = "Deslocamento do disco sem redução com limitação de abertura";
+      else if(ddsrGlobal.comLimitacao===false) nome = "Deslocamento do disco sem redução sem limitação de abertura";
+      else nome = "Deslocamento do disco sem redução (subtipo indefinido)";
+      const status = info.imgConfirm ? "Diagnóstico confirmado por imagem" : "Hipótese clínica (confirmação por imagem pendente)";
+      const criterios = [
+        "História de travamento fechado com incapacidade de abertura total, interferindo na mastigação (QS9 e QS10)."
+      ];
+      const pressupostos = [];
+      if(ddsrGlobal.medido){
+        criterios.push(`Abertura assistida total de ${ddsrGlobal.total} mm (${ddsrGlobal.comLimitacao ? "menor" : "maior ou igual a"} 40 mm).`);
+      } else {
+        pressupostos.push("A abertura assistida total não foi registrada (itens 3.1 e 3.2). Sem essa medida não é possível definir se há ou não limitação de abertura.");
+      }
+      if(info.imgConfirm) criterios.push("RM compatível: disco deslocado sem recaptura na abertura (item 4.1).");
+      const notas = ["A história não permite definir o lado acometido; diagnóstico emitido para ambos os lados, com lateralidade indefinida."];
+      if(ddsrGlobal.comLimitacao===false && !info.imgConfirm) notas.push("A sensibilidade do exame clínico para este diagnóstico é baixa; a RM é fortemente recomendada.");
+      porLado[s].push({nome, status, criterios, notas, pressupostos});
+    }
+  });
+
+  /* DAD */
+  ["D","E"].forEach(s=>{
+    const histOk = ladosRuido.has(s);
+    const examOk = STATE[`crepitacao_${s}`]==="Sim";
+    if(histOk && examOk){
+      const tcVal = STATE[`tc_${s}`];
+      const imgConfirm = tcVal === "Com alterações degenerativas (cisto subcondral, erosão, esclerose generalizada ou osteófito)";
+      const status = imgConfirm ? "Diagnóstico confirmado por imagem" : "Hipótese clínica (confirmação por imagem pendente)";
+      const criterios = [
+        `Ruído articular relatado ou detectado ao exame na ATM ${sideLabel(s)} (QS8 ou item 3.3).`,
+        "Crepitação detectada à palpação durante movimentos mandibulares (item 3.17)."
+      ];
+      if(imgConfirm) criterios.push("TC/TCFC compatível: alterações degenerativas (item 4.2).");
+      porLado[s].push({nome:"Doença articular degenerativa (DAD)", status, criterios});
+    } else if(histOk){
+      descartadosLado[s].push({nome:"DAD (doença articular degenerativa)", motivo: vazio(`crepitacao_${s}`)
+        ? "Ruído confirmado, mas a pesquisa de crepitação ainda não foi respondida (item 3.17); diagnóstico não avaliado."
+        : "Ruído confirmado, mas sem crepitação detectada à palpação durante movimentos mandibulares (item 3.17)."});
+    }
+  });
+
+  /* Subluxação, sem lateralidade */
+  if(b.ramoSublux){
+    let ok = true;
+    if(STATE.subluxExame==="Sim") ok = STATE.subluxIncapaz==="Sim";
+    if(ok){
+      let criterioExame;
+      if(STATE.subluxExame==="Sim") criterioExame = "Episódio reproduzido durante o exame, com incapacidade de fechar a boca sem manobra (item 3.19).";
+      else if(STATE.subluxExame==="Não") criterioExame = "O episódio não ocorreu durante o exame; a história isolada é suficiente para este diagnóstico.";
+      else criterioExame = "A ocorrência durante o exame não foi registrada (item 3.19); a história isolada é suficiente para este diagnóstico.";
+      semLado.push({nome:"Subluxação", status:"Diagnóstico", criterios:[
+        "História de travamento em boca aberta, com necessidade de manobra para fechar (QS13 e QS14).",
+        criterioExame
+      ]});
+    }
+  }
+
+  return {porLado, descartadosLado, semLado};
+}
+
+/* =========================================================
+   Motor de pendências: o que ainda falta para fechar o raciocínio.
+   Separa o que foi descartado por achado negativo do que apenas
+   não foi avaliado, e aponta o item exato que destrava cada diagnóstico.
+========================================================= */
+function computePendencias(d){
+  const b = computeBranches();
+  const ladosRuido = ladosRuidoAtual(b);
+  const loc34 = STATE.loc34 || [];
+  const hasTemporal = s => loc34.includes(`Temporal ${sideLabelM(s)}`);
+  const hasMasseter = s => loc34.includes(`Masseter ${sideLabelM(s)}`);
+  const hasATM = s => loc34.includes(`ATM ${sideLabel(s)}`);
+  const emitido = (s, teste) => d.porLado[s].some(x=>teste(x.nome));
+
+  const emAberto = [];
+  const refinamentos = [];
+  const imagem = [];
+
+  /* História ainda não respondida, por ramo */
+  const histDor = [];
+  if(vazio("qs3")) histDor.push("1.1, dor na mandíbula, têmpora ou ouvido nos últimos 30 dias");
+  else if(STATE.qs3==="Sim" && vazio("qs4")) histDor.push("1.2, modificação da dor por função ou parafunção");
+  const histDorNeg = STATE.qs3==="Não" || STATE.qs4==="Não";
+
+  const histCef = [];
+  if(vazio("qs5")) histCef.push("1.3, dor de cabeça na região das têmporas");
+  else if(STATE.qs5==="Sim" && vazio("qs7")) histCef.push("1.4, modificação da cefaleia por função ou parafunção");
+  const histCefNeg = STATE.qs5==="Não" || STATE.qs7==="Não";
+
+  const histRuido = [];
+  if(vazio("qs8") && vazio("examRuido_D") && vazio("examRuido_E")) histRuido.push("2.1 ou 3.3, presença de ruído articular");
+  else if(STATE.qs8==="Sim" && vazio("qs8_lado")) histRuido.push("2.1, lado do ruído relatado");
+
+  const histDDSR = [];
+  if(vazio("qs9")) histDDSR.push("2.2, travamento que impediu a abertura total");
+  else if(STATE.qs9==="Sim" && vazio("qs10")) histDDSR.push("2.3, interferência na capacidade de comer");
+
+  const histSublux = [];
+  if(vazio("qs13")) histSublux.push("2.5, travamento em boca aberta");
+  else if(STATE.qs13==="Sim" && vazio("qs14")) histSublux.push("2.6, necessidade de manobra para fechar a boca");
+
+  /* Mialgia e artralgia, por lado */
+  ["D","E"].forEach(s=>{
+    if(histDorNeg) return;
+    if(!emitido(s, n=>/Mialgia|miofascial/i.test(n))){
+      const itens = histDor.slice();
+      if(loc34.length===0) itens.push("3.4, localização da dor relatada");
+      else if(hasTemporal(s) || hasMasseter(s)){
+        if(hasTemporal(s) && vazio(`palpTemp_${s}`)) itens.push(`3.5, palpação do músculo temporal ${sideLabelM(s)}`);
+        if(hasMasseter(s) && vazio(`palpMass_${s}`)) itens.push(`3.6, palpação do músculo masseter ${sideLabelM(s)}`);
+        if(vazio(`aberturaDorFam_${s}`)) itens.push(`3.7, dor familiar em abertura máxima, lado ${sideLabelM(s)}`);
+      }
+      if(itens.length) emAberto.push({familia:"Mialgia e subtipos", lado:sideLabel(s), itens, bloco: itens[0].charAt(0)==="1" ? 1 : 3});
+    }
+    if(!emitido(s, n=>n==="Artralgia")){
+      const itens = histDor.slice();
+      if(loc34.length===0) itens.push("3.4, localização da dor relatada");
+      else if(hasATM(s)){
+        if(vazio(`poloLateral_${s}`)) itens.push(`3.10, palpação do polo lateral da ATM ${sideLabel(s)}`);
+        if(vazio(`atmMov_${s}`)) itens.push(`3.11, dor familiar na ATM em movimentos, lado ${sideLabelM(s)}`);
+      }
+      if(itens.length) emAberto.push({familia:"Artralgia", lado:sideLabel(s), itens, bloco: itens[0].charAt(0)==="1" ? 1 : 3});
+    }
+  });
+
+  /* Cefaleia atribuída à DTM, por lado */
+  ["D","E"].forEach(s=>{
+    if(histCefNeg) return;
+    if(emitido(s, n=>n.indexOf("Cefaleia")>=0)) return;
+    const itens = histCef.slice();
+    if(b.ramoCefaleia){
+      if(vazio(`cefTemp_${s}`)) itens.push(`3.12, localização da cefaleia no temporal, lado ${sideLabelM(s)}`);
+      else if(STATE[`cefTemp_${s}`]==="Sim" && vazio(`cefFam_${s}`)) itens.push(`3.13, cefaleia familiar reproduzida, lado ${sideLabelM(s)}`);
+    }
+    if(itens.length) emAberto.push({familia:"Cefaleia atribuída à DTM", lado:sideLabel(s), itens, bloco: itens[0].charAt(0)==="1" ? 1 : 3});
+  });
+
+  /* DDCR e DAD, por lado */
+  ["D","E"].forEach(s=>{
+    const jaDDCR = emitido(s, n=>n.indexOf("DDCR")>=0);
+    const jaDAD = emitido(s, n=>n.indexOf("Doença articular")>=0);
+    if(!ladosRuido.has(s)){
+      if(histRuido.length){
+        if(!jaDDCR) emAberto.push({familia:"DDCR", lado:sideLabel(s), itens:histRuido.slice(), bloco:2});
+        if(!jaDAD) emAberto.push({familia:"Doença articular degenerativa", lado:sideLabel(s), itens:histRuido.slice(), bloco:2});
+      }
+      return;
+    }
+    if(!jaDDCR){
+      const itens = [];
+      if(vazio(`clique1518_${s}`)) itens.push(`3.15, clique em abertura e fechamento, lado ${sideLabelM(s)}`);
+      else if(STATE[`clique1518_${s}`]==="Não" && vazio(`clique16_${s}`)) itens.push(`3.16, clique com lateralidade ou protrusão, lado ${sideLabelM(s)}`);
+      if(itens.length) emAberto.push({familia:"DDCR", lado:sideLabel(s), itens, bloco:3});
+    }
+    if(!jaDAD && vazio(`crepitacao_${s}`)){
+      emAberto.push({familia:"Doença articular degenerativa", lado:sideLabel(s), itens:[`3.17, crepitação à palpação, lado ${sideLabelM(s)}`], bloco:3});
+    }
+  });
+
+  /* DDSR e subluxação, sem lateralidade definida */
+  const jaDDSR = ["D","E"].some(s=>emitido(s, n=>n.indexOf("sem redução")>=0));
+  if(!jaDDSR && histDDSR.length) emAberto.push({familia:"Deslocamento do disco sem redução", lado:null, itens:histDDSR.slice(), bloco:2});
+  const jaSublux = d.semLado.some(x=>x.nome==="Subluxação");
+  if(!jaSublux && histSublux.length) emAberto.push({familia:"Subluxação", lado:null, itens:histSublux.slice(), bloco:2});
+
+  /* Refinamentos de diagnósticos já emitidos */
+  ["D","E"].forEach(s=>{
+    d.porLado[s].forEach(x=>{
+      if(x.nome!=="Mialgia") return;
+      const itens = [];
+      if(vazio("palp5s")) itens.push("3.8, palpação prolongada de 5 segundos");
+      else if(STATE.palp5s==="Sim"){
+        if(STATE[`palpTemp_${s}`]==="Sim" && vazio(`spreadTemp_${s}`)) itens.push(`3.9, padrão da dor no temporal ${sideLabelM(s)}`);
+        if(STATE[`palpMass_${s}`]==="Sim" && vazio(`spreadMass_${s}`)) itens.push(`3.9, padrão da dor no masseter ${sideLabelM(s)}`);
+      }
+      if(itens.length) refinamentos.push({texto:`Mialgia à ${sideLabel(s)} sem subtipo definido (mialgia local, dor miofascial ou dor miofascial com dor referida).`, itens, bloco:3});
+    });
+  });
+  if(b.ramoDDSR && !temMedidaAbertura() && jaDDSR){
+    refinamentos.push({texto:"Deslocamento do disco sem redução com subtipo indefinido (com ou sem limitação de abertura).", itens:["3.1 e 3.2, abertura máxima assistida e trespasse vertical incisal"], bloco:3});
+  }
+  if(vazio("outroDiagCef") && ["D","E"].some(s=>emitido(s, n=>n.indexOf("Cefaleia")>=0))){
+    refinamentos.push({texto:"Cefaleia atribuída à DTM emitida sem o critério de exclusão confirmado.", itens:["3.14, outro diagnóstico de cefaleia que explique melhor o quadro"], bloco:3});
+  }
+  if(vazio("travExame") && ["D","E"].some(s=>emitido(s, n=>n.indexOf("travamento intermitente")>=0))){
+    refinamentos.push({texto:"Travamento intermitente não verificado durante o exame.", itens:["3.18, ocorrência do travamento no exame"], bloco:3});
+  }
+
+  /* Confirmação por imagem das hipóteses emitidas */
+  ["D","E"].forEach(s=>{
+    d.porLado[s].forEach(x=>{
+      if(x.status!=="Hipótese clínica (confirmação por imagem pendente)") return;
+      const exame = x.nome.indexOf("Doença articular")>=0 ? "TC ou TCFC da ATM (item 4.2)" : "ressonância magnética da ATM (item 4.1)";
+      imagem.push({texto:`${x.nome}, ATM ${sideLabel(s)}: ${exame}.`});
+    });
+  });
+
+  /* Une entradas idênticas nos dois lados */
+  const mapa = {};
+  const unificado = [];
+  emAberto.forEach(p=>{
+    const chave = p.familia + "||" + p.itens.join("|").replace(/direit[oa]|esquerd[oa]/g,"");
+    if(mapa[chave]!==undefined){
+      unificado[mapa[chave]].lado = "ambos os lados";
+      return;
+    }
+    mapa[chave] = unificado.length;
+    unificado.push(p);
+  });
+
+  return {emAberto:unificado, refinamentos, imagem};
+}
+
+/* =========================================================
+   Resumo textual
+========================================================= */
+function buildResumoTexto(){
+  const d = computeDiagnoses();
+  const linhas = [];
+  linhas.push("Avaliação pelo algoritmo diagnóstico do Eixo I do DC/TMD (Schiffman et al., 2014; tradução brasileira de Pereira Jr. e Gonçalves, 2020).");
+  linhas.push("");
+
+  const hist = [];
+  if(STATE.qs3==="Sim" && STATE.qs4==="Sim") hist.push("dor mandibular, temporal ou auricular nos últimos 30 dias, modificada por função ou parafunção mandibular");
+  if(STATE.qs5==="Sim" && STATE.qs7==="Sim") hist.push("cefaleia na região temporal nos últimos 30 dias, modificada por função ou parafunção mandibular");
+  if(STATE.qs8==="Sim"){
+    const f = ladoFrase(STATE.qs8_lado);
+    hist.push("ruído em ATM" + (f ? " " + f : ""));
+  }
+  if(STATE.qs9==="Sim" && STATE.qs10==="Sim") hist.push("episódio de travamento fechado com limitação de abertura que interferiu na mastigação");
+  if(STATE.qs11==="Sim"){
+    const f = ladoFrase(STATE.qs11_lado);
+    hist.push("episódios de travamento intermitente" + (f ? " " + f : ""));
+  }
+  if(STATE.qs13==="Sim" && STATE.qs14==="Sim") hist.push("travamento em boca aberta com necessidade de manobra para fechar");
+  linhas.push(`História: ${hist.length ? hist.join("; ") + "." : "sem achados positivos relevantes na história."}`);
+  linhas.push("");
+
+  const abertura = STATE.abertura!==undefined && STATE.abertura!=="" ? STATE.abertura : "não registrada";
+  const trespasse = STATE.trespasse!==undefined && STATE.trespasse!=="" ? STATE.trespasse : "não registrado";
+  let totalTxt = "";
+  if(STATE.abertura!==undefined && STATE.abertura!=="" && STATE.trespasse!==undefined && STATE.trespasse!==""){
+    totalTxt = ` (total ${(parseFloat(STATE.abertura)||0)+(parseFloat(STATE.trespasse)||0)} mm)`;
+  }
+  const achadosExame = [];
+  ["D","E"].forEach(s=>{
+    if(STATE[`examRuido_${s}`]==="Sim") achadosExame.push(`ruído ao exame na ATM ${sideLabel(s)}`);
+    if(STATE[`crepitacao_${s}`]==="Sim") achadosExame.push(`crepitação na ATM ${sideLabel(s)}`);
+  });
+  linhas.push(`Exame físico (versão simplificada, itens do algoritmo diagnóstico): abertura máxima assistida de ${abertura} mm, trespasse vertical incisal de ${trespasse} mm${totalTxt}${achadosExame.length ? "; " + achadosExame.join("; ") + "." : "."}`);
+  linhas.push("");
+
+  const imgFrases = [];
+  ["D","E"].forEach(s=>{
+    const rm = STATE[`rm_${s}`];
+    const tc = STATE[`tc_${s}`];
+    if(rm && rm!=="Não realizada") imgFrases.push(`RM ${sideLabel(s)}, ${rm.toLowerCase()}`);
+    if(tc && tc!=="Não realizada") imgFrases.push(`TC/TCFC ${sideLabel(s)}, ${tc.toLowerCase()}`);
+  });
+  linhas.push(`Exames de imagem: ${imgFrases.length ? imgFrases.join("; ") + "." : "não realizados."}`);
+  linhas.push("");
+
+  linhas.push("Hipóteses diagnósticas:");
+  const fmtLado = (s)=>{
+    const label = s==="D" ? "ATM direita" : "ATM esquerda";
+    if(!d.porLado[s].length) return `${label}: nenhum diagnóstico identificado.`;
+    return `${label}: ${d.porLado[s].map(x=>`${x.nome} (${x.status})`).join("; ")}.`;
+  };
+  linhas.push(fmtLado("D"));
+  linhas.push(fmtLado("E"));
+  if(d.semLado.length){
+    linhas.push(d.semLado.map(x=>`${x.nome} (${x.status})`).join("; ") + ".");
+  }
+
+  const p = computePendencias(d);
+  if(p.emAberto.length || p.refinamentos.length || p.imagem.length){
+    linhas.push("");
+    linhas.push("Pendências da avaliação:");
+    p.emAberto.forEach(item=>{
+      linhas.push(`${rotuloPendencia(item)}, em aberto: falta responder ${item.itens.join("; ")}.`);
+    });
+    p.refinamentos.forEach(item=>{
+      linhas.push(`${item.texto} Falta responder ${item.itens.join("; ")}.`);
+    });
+    p.imagem.forEach(item=>{
+      linhas.push(`Confirmação por imagem, ${item.texto}`);
+    });
+  }
+
+  linhas.push("");
+  linhas.push("Esta ferramenta apoia o raciocínio clínico e não substitui o julgamento do examinador.");
+  return linhas.join("\n");
+}
+
+/* =========================================================
+   Bloco 5, resultado
+========================================================= */
+function renderHypCard(dx, key, descartados){
+  let badgeClass = "badge-hipotese";
+  if(dx.status==="Diagnóstico") badgeClass = "badge-diag";
+  else if(dx.status.indexOf("confirmado")>=0) badgeClass = "badge-confirmado";
+  let inner = "<ul>" + dx.criterios.map(c=>`<li>${esc(c)}</li>`).join("") + "</ul>";
+  if(dx.pressupostos && dx.pressupostos.length){
+    inner += `<p class="pressuposto-title">Pressupostos não confirmados:</p><ul>` + dx.pressupostos.map(p=>`<li>${esc(p)}</li>`).join("") + `</ul>`;
+  }
+  if(dx.notas && dx.notas.length) inner += `<p class="sec-instruction">${dx.notas.map(esc).join(" ")}</p>`;
+  if(descartados && descartados.length){
+    inner += `<p class="descartados-title">Outros diagnósticos considerados neste lado:</p><ul>` + descartados.map(x=>`<li>${esc(x.nome)}: ${esc(x.motivo)}</li>`).join("") + `</ul>`;
+  }
+  return `<div class="hyp-card">
+    <button class="hyp-toggle" type="button" data-target="hyp_${key}"><span>${esc(dx.nome)}</span><span class="badge ${badgeClass}">${esc(dx.status)}</span></button>
+    <div class="hyp-detail hidden" id="hyp_${key}">${inner}</div>
+  </div>`;
+}
+
+function renderBlock5(){
+  const d = computeDiagnoses();
+  const anyFound = d.porLado.D.length || d.porLado.E.length || d.semLado.length;
+  let html = `<div class="section"><h3>Bloco 5 de 5, resultado</h3></div>`;
+
+  if(!anyFound){
+    html += `<div class="section"><p>Nenhum diagnóstico do Eixo I do DC/TMD foi identificado com os dados informados. Considere reavaliar ou investigar outros diagnósticos.</p></div>`;
+  } else {
+    ["D","E"].forEach(s=>{
+      const label = s==="D" ? "ATM direita" : "ATM esquerda";
+      html += `<div class="section"><h3>${label}</h3>`;
+      if(!d.porLado[s].length){
+        html += `<p class="sec-instruction">Nenhum diagnóstico identificado neste lado.</p>`;
+      } else {
+        d.porLado[s].forEach((dx,idx)=>{ html += renderHypCard(dx, `${s}_${idx}`, d.descartadosLado[s]); });
+      }
+      html += `</div>`;
+    });
+    if(d.semLado.length){
+      html += `<div class="section"><h3>Diagnósticos sem lateralidade</h3>`;
+      d.semLado.forEach((dx,idx)=>{ html += renderHypCard(dx, `SL_${idx}`, []); });
+      html += `</div>`;
+    }
+  }
+
+  const p = computePendencias(d);
+
+  if(p.emAberto.length){
+    html += `<div class="section pend-section"><h3>Diagnósticos em aberto, o que falta responder</h3>
+      <p class="sec-instruction">Estes diagnósticos não foram descartados: os itens abaixo ainda não foram avaliados e podem mudar o resultado.</p>`;
+    p.emAberto.forEach(item=>{
+      html += `<div class="pend-item">
+        <div class="pend-head">${esc(rotuloPendencia(item))}</div>
+        <ul>${item.itens.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>
+        <button class="btn-link" type="button" data-goto="${item.bloco}">Abrir bloco ${item.bloco}</button>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if(p.refinamentos.length){
+    html += `<div class="section pend-section"><h3>Refinamentos pendentes</h3>
+      <p class="sec-instruction">Diagnósticos já emitidos que podem ser detalhados ou confirmados com mais um item.</p>`;
+    p.refinamentos.forEach(item=>{
+      html += `<div class="pend-item">
+        <div class="pend-head">${esc(item.texto)}</div>
+        <ul>${item.itens.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>
+        <button class="btn-link" type="button" data-goto="${item.bloco}">Abrir bloco ${item.bloco}</button>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if(p.imagem.length){
+    html += `<div class="section pend-section"><h3>Confirmação por imagem</h3>
+      <p class="sec-instruction">Exames que converteriam as hipóteses clínicas abaixo em diagnóstico confirmado.</p>
+      <ul>${p.imagem.map(i=>`<li>${esc(i.texto)}</li>`).join("")}</ul>
+      <button class="btn-link" type="button" data-goto="4">Abrir bloco 4</button></div>`;
+  }
+
+  html += `<div class="section"><h3>Resumo para o prontuário</h3><textarea id="resumo-text" readonly>${esc(buildResumoTexto())}</textarea></div>`;
+  document.getElementById("form-content").innerHTML = html;
+}
+
+/* =========================================================
+   Navegação
+========================================================= */
+function renderCurrentBlock(){
+  if(currentBlock===1) renderBlock1();
+  else if(currentBlock===2) renderBlock2();
+  else if(currentBlock===3) renderBlock3();
+  else if(currentBlock===4) renderBlock4();
+  else if(currentBlock===5) renderBlock5();
+  document.getElementById("progress-head").textContent = `Bloco ${currentBlock} de 5`;
+  document.getElementById("progress-fill").style.width = `${(currentBlock/5)*100}%`;
+  updateNav();
+}
+function updateNav(){
+  const row = document.getElementById("nav-row");
+  if(currentBlock<5){
+    row.innerHTML = `<button class="btn btn-ghost" id="btn-prev">Voltar</button><button class="btn btn-primary" id="btn-next">Avançar</button>`;
+    document.getElementById("btn-prev").addEventListener("click", goPrev);
+    document.getElementById("btn-next").addEventListener("click", goNext);
+    document.getElementById("btn-prev").style.visibility = currentBlock===1 ? "hidden" : "visible";
+  } else {
+    row.innerHTML = `<button class="btn btn-ghost" id="btn-prev5">Voltar</button><button class="btn btn-primary" id="btn-copy">Copiar resumo</button><button class="btn btn-ghost" id="btn-restart">Nova avaliação</button>`;
+    document.getElementById("btn-prev5").addEventListener("click", goPrev);
+    document.getElementById("btn-copy").addEventListener("click", copyResumo);
+    document.getElementById("btn-restart").addEventListener("click", restart);
+  }
+}
+function goNext(){ if(currentBlock<5){ currentBlock++; renderCurrentBlock(); window.scrollTo(0,0); } }
+function goPrev(){ if(currentBlock>1){ currentBlock--; renderCurrentBlock(); window.scrollTo(0,0); } }
+
+function copyResumo(){
+  const text = buildResumoTexto();
+  function done(){ showToast("Resumo copiado para a área de transferência."); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+function fallbackCopy(text, done){
+  const ta = document.getElementById("resumo-text");
+  if(ta){ ta.focus(); ta.select(); try{ document.execCommand("copy"); done(); }catch(e){} }
+}
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+function restart(){
+  if(!confirm("Deseja iniciar uma nova avaliação? Todas as respostas atuais serão apagadas.")) return;
+  STATE = {};
+  currentBlock = 1;
+  avaliacaoAtiva = false;
+  document.getElementById("screen-flow").classList.add("hidden");
+  document.getElementById("screen-home").classList.remove("hidden");
+  window.scrollTo(0,0);
+}
+
+/* =========================================================
+   Delegação de eventos do formulário
+========================================================= */
+function onFormChange(e){
+  const t = e.target;
+  if(!t.name) return;
+  if(t.type==="checkbox"){
+    STATE[t.name] = Array.from(document.querySelectorAll(`input[name="${t.name}"]:checked`)).map(i=>i.value);
+  } else {
+    STATE[t.name] = t.value;
+  }
+  const y = window.scrollY;
+  const block = currentBlock;
+  if(block===1) renderBlock1();
+  else if(block===2) renderBlock2();
+  else if(block===3) renderBlock3();
+  else if(block===4) renderBlock4();
+  window.scrollTo(0,y);
+}
+function onFormClick(e){
+  const btn = e.target.closest(".hyp-toggle");
+  if(btn){
+    const target = document.getElementById(btn.dataset.target);
+    if(target) target.classList.toggle("hidden");
+    return;
+  }
+  const ir = e.target.closest("[data-goto]");
+  if(ir) goToBlock(parseInt(ir.dataset.goto,10));
+}
+function goToBlock(n){
+  if(!(n>=1 && n<=5)) return;
+  currentBlock = n;
+  renderCurrentBlock();
+  window.scrollTo(0,0);
+}
+
+/* =========================================================
+   Inicialização
+========================================================= */
+document.getElementById("form-content").addEventListener("change", onFormChange);
+document.getElementById("form-content").addEventListener("click", onFormClick);
+document.getElementById("btn-start").addEventListener("click", function(){
+  avaliacaoAtiva = true;
+  currentBlock = 1;
+  document.getElementById("screen-home").classList.add("hidden");
+  document.getElementById("screen-flow").classList.remove("hidden");
+  renderCurrentBlock();
+  window.scrollTo(0,0);
+});
+
+window.addEventListener("beforeunload", function(e){
+  if(avaliacaoAtiva){
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+/* Permite abrir sem internet quando instalado pela tela de início.
+   Guarda apenas os arquivos do app; nenhuma resposta de paciente é gravada.
+   Só funciona em site publicado (https); aberto como arquivo local, é ignorado. */
+if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
